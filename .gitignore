@@ -1,0 +1,35 @@
+# Node.js 依赖
+node_modules/
+package-lock.json
+yarn-lock.json
+
+# 运行日志
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# 操作系统文件
+.DS_Store
+Thumbs.db
+*.tmp
+
+# 项目生成的文件
+thumbnails/
+*.jpg
+*.png
+
+# 视频文件（不上传）
+video/
+*.mp4
+
+# 编辑器配置
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# 环境变量
+.env
+.env.local
+.env.*.local

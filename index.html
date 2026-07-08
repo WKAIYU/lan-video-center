@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>局域网视频中心</title>
+    
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/dplayer/1.26.0/DPlayer.min.js">
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: #ffffff;
+            color: #333;
+            padding: 24px;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .header {
+            margin-bottom: 28px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .header-left h1 {
+            font-size: 24px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            color: #222;
+        }
+
+        .header-left .subtitle {
+            margin-top: 6px;
+            font-size: 14px;
+            color: #999;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            background: #fff;
+            color: #333;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #f0f0f0;
+            border-color: #bbb;
+        }
+
+        .btn-primary {
+            background: #333;
+            color: #fff;
+            border-color: #333;
+        }
+
+        .btn-primary:hover {
+            background: #555;
+            border-color: #555;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        #player-container {
+            margin-bottom: 32px;
+            background: #fafafa;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+            display: none;
+        }
+
+        #player-container.active {
+            display: block;
+        }
+
+        #dplayer {
+            width: 100%;
+            height: 480px;
+        }
+
+        .empty-hint {
+            text-align: center;
+            padding: 60px 20px;
+            color: #bbb;
+            font-size: 15px;
+            border: 1px dashed #e8e8e8;
+            border-radius: 8px;
+            background: #fafafa;
+        }
+
+        .empty-hint .icon {
+            font-size: 48px;
+            display: block;
+            margin-bottom: 16px;
+        }
+
+        .empty-hint .path {
+            background: #f0f0f0;
+            padding: 4px 12px;
+            border-radius: 4px;
+            font-family: monospace;
+            color: #666;
+            display: inline-block;
+            margin-top: 8px;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 8px;
+        }
+
+        .video-card {
+            background: #f8f8f8;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: background 0.2s ease, transform 0.15s ease, box-shadow 0.15s ease;
+            border: 1px solid #f0f0f0;
+            position: relative;
+        }
+
+        .video-card:hover {
+            background: #f0f0f0;
+            transform: translateY(-2px);
+            border-color: #ddd;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .video-card:active {
+            transform: scale(0.98);
+        }
+
+        .video-card .thumbnail {
+            width: 100%;
+            aspect-ratio: 16 / 9;
+            background: #e8e8e8;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #aaa;
+            font-size: 36px;
+            user-select: none;
+            transition: background 0.2s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .video-card .thumbnail img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+
+        .video-card .thumbnail .fallback {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            color: #aaa;
+        }
+
+        .video-card .thumbnail .generating {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 14px;
+            color: #999;
+            background: rgba(255,255,255,0.8);
+            padding: 4px 12px;
+            border-radius: 4px;
+        }
+
+        .video-card:hover .thumbnail {
+            background: #ddd;
+        }
+
+        .video-card .play-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: rgba(0, 0, 0, 0.6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 20px;
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+        }
+
+        .video-card:hover .play-overlay {
+            opacity: 1;
+        }
+
+        .video-card .video-name {
+            padding: 12px 14px;
+            font-size: 14px;
+            font-weight: 400;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            color: #444;
+            background: #ffffff;
+            border-top: 1px solid #f0f0f0;
+        }
+
+        .video-card.active {
+            border-color: #333;
+            background: #f0f0f0;
+            box-shadow: 0 0 0 2px #333;
+        }
+
+        .video-card.active .video-name {
+            color: #000;
+            font-weight: 500;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .loading .spinner {
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #f0f0f0;
+            border-top-color: #333;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 999;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+        }
+
+        .toast.show {
+            opacity: 1;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 16px;
+            }
+            #dplayer {
+                height: 280px;
+            }
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+                gap: 12px;
+            }
+            .header h1 {
+                font-size: 20px;
+            }
+            .video-card .play-overlay {
+                width: 36px;
+                height: 36px;
+                font-size: 16px;
+            }
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .header-actions {
+                justify-content: stretch;
+            }
+            .header-actions .btn {
+                flex: 1;
+                text-align: center;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <h1>📹 视频中心</h1>
+                <div class="subtitle">点击视频卡片即可播放 · 支持浏览器直接播放 MP4</div>
+            </div>
+            <div class="header-actions">
+                <button class="btn" id="refreshBtn" title="刷新视频列表">🔄 刷新</button>
+                <button class="btn btn-primary" id="generateAllBtn" title="为所有视频生成封面">🎨 生成全部封面</button>
+            </div>
+        </div>
+
+        <div id="player-container">
+            <div id="dplayer"></div>
+        </div>
+
+        <div id="video-list">
+            <div class="loading">
+                <div class="spinner"></div>
+                <p style="margin-top: 12px;">加载视频列表...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast 通知 -->
+    <div id="toast" class="toast"></div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            let currentVideo = null;
+            let dplayerInstance = null;
+            let videoData = [];
+            let isGenerating = false;
+
+            const container = document.getElementById('player-container');
+            const dplayerEl = document.getElementById('dplayer');
+            const videoListEl = document.getElementById('video-list');
+            const toastEl = document.getElementById('toast');
+            const refreshBtn = document.getElementById('refreshBtn');
+            const generateAllBtn = document.getElementById('generateAllBtn');
+
+            // ---------- Toast 通知 ----------
+            let toastTimer = null;
+
+            function showToast(message, duration = 3000) {
+                toastEl.textContent = message;
+                toastEl.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => {
+                    toastEl.classList.remove('show');
+                }, duration);
+            }
+
+            // ---------- API 请求 ----------
+            async function fetchVideoList() {
+                try {
+                    const res = await fetch('/api/videos');
+                    if (!res.ok) throw new Error('获取列表失败: ' + res.status);
+                    return await res.json();
+                } catch (err) {
+                    console.error('获取视频列表出错:', err);
+                    return null;
+                }
+            }
+
+            async function generateThumbnail(filename) {
+                try {
+                    const res = await fetch(`/api/generate-thumb/${encodeURIComponent(filename)}`, {
+                        method: 'POST'
+                    });
+                    if (!res.ok) throw new Error('生成失败');
+                    return await res.json();
+                } catch (err) {
+                    console.error('生成缩略图失败:', err);
+                    return null;
+                }
+            }
+
+            async function generateAllThumbnails() {
+                if (isGenerating) return;
+                isGenerating = true;
+                generateAllBtn.disabled = true;
+                generateAllBtn.textContent = '⏳ 生成中...';
+                showToast('正在生成所有封面，请稍候...', 5000);
+
+                try {
+                    const res = await fetch('/api/generate-all-thumbs', {
+                        method: 'POST'
+                    });
+                    const result = await res.json();
+                    if (result.success) {
+                        showToast(`✅ ${result.message}`, 4000);
+                        // 刷新列表
+                        await loadVideos();
+                    } else {
+                        showToast('❌ 生成失败: ' + (result.message || '未知错误'), 4000);
+                    }
+                } catch (err) {
+                    console.error('批量生成失败:', err);
+                    showToast('❌ 批量生成失败，请检查控制台', 4000);
+                } finally {
+                    isGenerating = false;
+                    generateAllBtn.disabled = false;
+                    generateAllBtn.textContent = '🎨 生成全部封面';
+                }
+            }
+
+            // ---------- 渲染视频列表 ----------
+            function renderVideoList(videos) {
+                videoData = videos;
+
+                if (!videos || !Array.isArray(videos)) {
+                    videoListEl.innerHTML = `
+                        <div class="empty-hint">
+                            <span class="icon">⚠️</span>
+                            无法连接到服务器<br />
+                            <small style="color: #ccc;">请确保服务正在运行</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                if (videos.length === 0) {
+                    videoListEl.innerHTML = `
+                        <div class="empty-hint">
+                            <span class="icon">📂</span>
+                            还没有视频<br />
+                            请将 <strong>.mp4</strong> 文件放到 <span class="path">./video/</span> 目录下<br />
+                            <small style="color: #ccc; display: block; margin-top: 8px;">然后刷新页面</small>
+                        </div>
+                    `;
+                    return;
+                }
+
+                let html = '<div class="video-grid">';
+                for (const video of videos) {
+                    const filename = video.filename;
+                    const encoded = encodeURIComponent(filename);
+                    const isActive = (currentVideo === filename);
+                    const displayName = filename.replace(/\.[^.]+$/, '');
+                    const thumbUrl = video.thumbnail || null;
+                    const needGenerate = video.needGenerate || false;
+                    
+                    html += `
+                        <div class="video-card ${isActive ? 'active' : ''}" 
+                             data-filename="${encoded}"
+                             data-needgenerate="${needGenerate}">
+                            <div class="thumbnail">
+                                ${thumbUrl ? `<img src="${thumbUrl}" alt="${displayName}" loading="lazy" />` : '🎬'}
+                                ${needGenerate ? '<div class="generating">📸 生成中...</div>' : ''}
+                                <div class="play-overlay">▶</div>
+                            </div>
+                            <div class="video-name" title="${filename}">${displayName}</div>
+                        </div>
+                    `;
+                }
+                html += '</div>';
+                videoListEl.innerHTML = html;
+
+                // 绑定点击事件
+                videoListEl.querySelectorAll('.video-card').forEach(card => {
+                    card.addEventListener('click', function(e) {
+                        const filename = this.dataset.filename;
+                        if (filename) {
+                            const decoded = decodeURIComponent(filename);
+                            // 如果视频需要生成封面，先触发生成
+                            const needGen = this.dataset.needgenerate === 'true';
+                            if (needGen) {
+                                generateAndUpdateThumb(decoded, this);
+                            }
+                            playVideo(decoded);
+                        }
+                    });
+                });
+            }
+
+            // ---------- 生成单个视频封面并更新卡片 ----------
+            async function generateAndUpdateThumb(filename, cardElement) {
+                try {
+                    const result = await generateThumbnail(filename);
+                    if (result && result.success) {
+                        // 更新卡片
+                        const thumbDiv = cardElement.querySelector('.thumbnail');
+                        const genDiv = thumbDiv.querySelector('.generating');
+                        if (genDiv) genDiv.remove();
+                        // 更新图片
+                        const img = thumbDiv.querySelector('img');
+                        if (img) {
+                            img.src = result.thumbnail + '?t=' + Date.now(); // 防止缓存
+                        } else {
+                            // 如果没有 img 元素，创建一个
+                            const imgEl = document.createElement('img');
+                            imgEl.src = result.thumbnail + '?t=' + Date.now();
+                            imgEl.alt = filename.replace(/\.[^.]+$/, '');
+                            imgEl.loading = 'lazy';
+                            // 移除 fallback 内容
+                            const fallback = thumbDiv.querySelector('.fallback');
+                            if (fallback) fallback.remove();
+                            thumbDiv.appendChild(imgEl);
+                        }
+                        // 更新 data 属性
+                        cardElement.dataset.needgenerate = 'false';
+                        // 更新 videoData
+                        const video = videoData.find(v => v.filename === filename);
+                        if (video) {
+                            video.thumbnail = result.thumbnail;
+                            video.needGenerate = false;
+                        }
+                        showToast(`✅ 封面生成成功: ${filename}`, 2000);
+                    }
+                } catch (e) {
+                    console.error('生成封面失败:', e);
+                }
+            }
+
+            // ---------- 播放视频 ----------
+            function playVideo(filename) {
+                if (!filename) return;
+
+                console.log('播放视频:', filename);
+
+                currentVideo = filename;
+
+                document.querySelectorAll('.video-card').forEach(card => {
+                    const cardName = decodeURIComponent(card.dataset.filename || '');
+                    card.classList.toggle('active', cardName === filename);
+                });
+
+                const videoUrl = `/video/${encodeURIComponent(filename)}`;
+                console.log('视频URL:', videoUrl);
+
+                container.classList.add('active');
+
+                if (dplayerInstance) {
+                    try {
+                        dplayerInstance.destroy();
+                    } catch (e) {
+                        console.warn('销毁播放器时出错:', e);
+                    }
+                    dplayerInstance = null;
+                }
+
+                try {
+                    dplayerInstance = new DPlayer({
+                        container: dplayerEl,
+                        video: {
+                            url: videoUrl,
+                            type: 'auto',
+                        },
+                        autoplay: true,
+                        danmaku: false,
+                        logo: false,
+                        contextmenu: [],
+                        screenshot: true,
+                        lang: 'zh-cn',
+                        theme: '#333333',
+                    });
+
+                    dplayerInstance.on('error', function(e) {
+                        console.error('播放器错误:', e);
+                        console.log('视频加载失败，请检查文件是否完整或格式是否正确');
+                    });
+
+                    dplayerInstance.on('loadedmetadata', function() {
+                        console.log('视频加载成功');
+                    });
+
+                } catch (e) {
+                    console.error('创建播放器失败:', e);
+                    console.log('播放器初始化失败，请刷新页面重试');
+                }
+            }
+
+            // ---------- 加载视频列表 ----------
+            async function loadVideos() {
+                videoListEl.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p style="margin-top: 12px;">加载视频列表...</p>
+                    </div>
+                `;
+
+                const videos = await fetchVideoList();
+                renderVideoList(videos);
+
+                if (videos && Array.isArray(videos) && videos.length > 0) {
+                    // 检查是否有视频需要生成封面，如果有则后台生成
+                    const needGen = videos.filter(v => v.needGenerate);
+                    if (needGen.length > 0) {
+                        console.log(`发现 ${needGen.length} 个视频需要生成封面，后台生成中...`);
+                        // 逐个生成
+                        for (const video of needGen) {
+                            const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(video.filename)}"]`);
+                            if (card) {
+                                await generateAndUpdateThumb(video.filename, card);
+                            }
+                        }
+                    }
+                    
+                    // 播放第一个视频
+                    setTimeout(() => {
+                        playVideo(videos[0].filename);
+                    }, 100);
+                } else {
+                    container.classList.remove('active');
+                }
+            }
+
+            // ---------- 事件绑定 ----------
+            refreshBtn.addEventListener('click', loadVideos);
+            generateAllBtn.addEventListener('click', generateAllThumbnails);
+
+            // ---------- 初始化 ----------
+            if (document.readyState === 'loading') {
+                document.addEventListener('DOMContentLoaded', loadVideos);
+            } else {
+                loadVideos();
+            }
+
+            window.addEventListener('error', function(e) {
+                console.error('页面错误:', e.message);
+            });
+
+        })();
+    </script>
+
+</body>
+</html>
