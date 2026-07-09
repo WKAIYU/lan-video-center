@@ -1,8 +1,9 @@
-# 📹 局域网视频中心(LVC)
- LAN Video Center
-> 在你电脑上搭建一个轻量级的局域网视频服务，让手机、平板、电视等设备通过浏览器观看 MP4 视频。
+# 📹 局域网视频中心 (LVC)
+LAN Video Center
 
-基于 **Node.js** 和 **DPlayer**，支持视频列表浏览、点击播放、进度拖拽，界面纯白简洁。
+> 在你电脑上搭建一个轻量级的局域网视频服务，让手机、平板、电视等设备通过浏览器观看 MP4 视频，支持字幕自动加载。
+
+基于 **Node.js** 和 **DPlayer**，支持视频列表浏览、点击播放、进度拖拽、字幕加载，界面纯白简洁。
 
 ---
 
@@ -14,7 +15,24 @@
 - 🎯 **开箱即用**：只需把视频放到 `video/` 文件夹，一键启动
 - 🖱️ **拖拽进度**：支持视频进度条拖拽（Range 请求）
 - 🖼️ **智能封面**：自动生成视频缩略图，也可手动放置自定义封面
+- 💬 **字幕支持**：自动加载同名字幕文件（`.vtt`）
+- 🔍 **搜索功能**：快速筛选视频
 - 📦 **轻量依赖**：仅需 Node.js 和 Express
+
+---
+
+## 📁 目录结构
+
+```
+lan-video-center/
+├── video/              # 视频文件 (.mp4)
+├── subtitles/          # 字幕文件 (.vtt)
+├── thumbnails/         # 自动生成的封面
+├── server.js           # 服务端代码
+├── package.json        # 依赖配置
+├── index.html          # 前端页面
+└── README.md           # 本说明文档
+```
 
 ---
 
@@ -34,32 +52,23 @@
 
 ### 2. 下载项目
 
-将以下文件放到同一个文件夹（例如 `video-show/`）：
-
-```
-video-show/
-├── server.js          # 服务端代码
-├── package.json       # 依赖配置
-├── index.html         # 前端页面
-└── README.md          # 本说明文档
+```bash
+git clone https://github.com/WKAIYU/lan-video-center.git
+cd lan-video-center
 ```
 
 ### 3. 安装依赖
 
-在项目文件夹中打开终端（命令行），运行：
-
 ```bash
 npm install
 ```
-
-这会自动安装 Express 框架。
 
 ### 4. 放入视频
 
 在项目根目录下创建 `video/` 文件夹，将所有 `.mp4` 视频文件放进去：
 
 ```
-video-show/
+lan-video-center/
 ├── video/             ← 创建这个文件夹，放入视频
 │   ├── 电影A.mp4
 │   ├── 电视剧B.mp4
@@ -72,28 +81,21 @@ video-show/
 
 ### 5. 启动服务
 
-在终端中运行：
-
 ```bash
 npm start
-```
-
-或者：
-
-```bash
-node server.js
 ```
 
 看到以下输出表示启动成功：
 
 ```
 ============================================================
-📹 局域网视频中心已启动 (Node.js)
+📹 LVC - Lan Video Center 已启动
 ============================================================
   本地访问: http://127.0.0.1:8000
   局域网访问: http://192.168.2.197:8000
-  视频目录: /path/to/video-show/video
-  缩略图目录: /path/to/video-show/thumbnails
+  视频目录: /path/to/lan-video-center/video
+  字幕目录: /path/to/lan-video-center/subtitles
+  缩略图目录: /path/to/lan-video-center/thumbnails
   按 Ctrl+C 停止服务
 ============================================================
 ```
@@ -104,6 +106,38 @@ node server.js
 - **局域网设备访问**：确保设备与电脑在同一 Wi-Fi 网络，浏览器打开 `http://你的电脑IP:8000`
 
 点击任意视频卡片即可播放。
+
+---
+
+## 💬 字幕使用说明
+
+### 使用方法
+
+1. 在项目根目录创建 `subtitles/` 文件夹
+2. 将字幕文件放入，**文件名需与视频文件同名**
+   - 视频：`video/我的视频.mp4`
+   - 字幕：`subtitles/我的视频.vtt`
+3. 支持格式：`.vtt`
+
+### 目录结构示例
+
+```
+lan-video-center/
+├── video/
+│   └── 我的视频.mp4
+├── subtitles/         ← 创建这个文件夹，放入字幕
+│   └── 我的视频.vtt
+├── server.js
+├── package.json
+├── index.html
+└── README.md
+```
+
+### 播放效果
+
+- 视频卡片右上角会显示 **💬** 标签，表示该视频有字幕
+- 播放时字幕自动加载
+- DPlayer 播放器支持字幕开关和样式调整
 
 ---
 
@@ -142,7 +176,7 @@ node server.js
 3. 图片推荐尺寸：**320x180** 或 16:9 比例
 
 ```
-video-show/
+lan-video-center/
 ├── video/
 │   ├── 电影A.mp4
 │   └── 电视剧B.mp4
@@ -162,6 +196,16 @@ video-show/
 1. **优先使用** `thumbnails/` 文件夹中已有的图片（手动放置的封面）
 2. 如果 `thumbnails/` 中没有对应图片，**自动生成**（需要 FFmpeg）
 3. 如果自动生成也失败，则显示默认的 🎬 图标
+
+---
+
+## 🔍 搜索功能
+
+页面右上角提供搜索框，输入关键词即可实时筛选视频列表：
+
+- 支持中文和英文搜索
+- 匹配视频文件名（不含扩展名）
+- 按 `ESC` 键快速清空搜索
 
 ---
 
@@ -238,6 +282,15 @@ size: '320x180',  // 改为你想要的尺寸，如 '640x360'
 ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
 ```
 
+### Q: 字幕不显示怎么办？
+
+1. 检查字幕文件是否与视频**同名**
+   - 视频：`video/我的视频.mp4`
+   - 字幕：`subtitles/我的视频.srt`
+2. 确认字幕文件格式是否为 `.srt`、`.ass` 或 `.vtt`
+3. 检查字幕文件的编码是否为 UTF-8
+4. 刷新页面后重新点击播放
+
 ### Q: 封面图不显示怎么办？
 
 1. 检查 FFmpeg 是否正确安装（方式一需要）
@@ -267,6 +320,7 @@ ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
 | `package.json` | 项目依赖配置文件 |
 | `index.html` | 前端页面，包含视频列表和 DPlayer 播放器 |
 | `video/` | 存放 MP4 视频文件的目录（需手动创建） |
+| `subtitles/` | 存放字幕文件的目录（需手动创建） |
 | `thumbnails/` | 存放封面图的目录（自动创建，也可手动放置） |
 | `README.md` | 项目说明文档（本文件） |
 
@@ -276,9 +330,15 @@ ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
 
 - **后端**：Node.js + Express（高性能 Web 服务）
 - **前端**：原生 HTML + CSS + JavaScript
-- **播放器**：DPlayer（开源 HTML5 播放器）
+- **播放器**：DPlayer（开源 HTML5 播放器，支持字幕）
 - **视频传输**：流式传输 + Range 请求支持（可拖拽进度）
 - **缩略图生成**：fluent-ffmpeg（FFmpeg 的 Node.js 封装）
+
+---
+
+## 📄 许可证
+
+MIT License · 自由使用，随意修改
 
 ---
 

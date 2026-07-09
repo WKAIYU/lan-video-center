@@ -22,6 +22,12 @@ thumbnails/
 video/
 *.mp4
 
+# 字幕文件（不上传，用户自己添加）
+subtitles/
+*.srt
+*.ass
+*.vtt
+
 # 编辑器配置
 .vscode/
 .idea/

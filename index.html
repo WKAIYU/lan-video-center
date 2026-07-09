@@ -30,7 +30,6 @@
             margin: 0 auto;
         }
 
-        /* ===== 头部 ===== */
         .header {
             margin-bottom: 28px;
             padding-bottom: 16px;
@@ -62,7 +61,6 @@
             color: #999;
         }
 
-        /* ===== 搜索框 ===== */
         .search-bar {
             display: flex;
             align-items: center;
@@ -115,7 +113,6 @@
             display: block;
         }
 
-        /* ===== 统计信息 ===== */
         .video-stats {
             font-size: 13px;
             color: #999;
@@ -128,7 +125,6 @@
             font-weight: 500;
         }
 
-        /* ===== 播放器 ===== */
         #player-container {
             margin-bottom: 32px;
             background: #fafafa;
@@ -147,7 +143,6 @@
             height: 480px;
         }
 
-        /* ===== 空状态 ===== */
         .empty-hint {
             text-align: center;
             padding: 60px 20px;
@@ -174,7 +169,6 @@
             margin-top: 8px;
         }
 
-        /* ===== 视频网格 ===== */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -182,7 +176,6 @@
             margin-top: 8px;
         }
 
-        /* ===== 视频卡片 ===== */
         .video-card {
             background: #f8f8f8;
             border-radius: 8px;
@@ -204,7 +197,6 @@
             transform: scale(0.98);
         }
 
-        /* 隐藏被搜索过滤掉的卡片 */
         .video-card.hidden {
             display: none;
         }
@@ -252,6 +244,25 @@
             border-radius: 4px;
         }
 
+        .video-card .thumbnail .subtitle-tag {
+            position: absolute;
+            bottom: 8px;
+            right: 8px;
+            background: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            font-size: 11px;
+            padding: 2px 10px;
+            border-radius: 10px;
+            letter-spacing: 0.3px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .video-card .thumbnail .subtitle-tag .s-icon {
+            font-size: 12px;
+        }
+
         .video-card:hover .thumbnail {
             background: #ddd;
         }
@@ -289,6 +300,19 @@
             color: #444;
             background: #ffffff;
             border-top: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .video-card .video-name .sub-badge {
+            font-size: 10px;
+            color: #1a73e8;
+            background: #e8f0fe;
+            padding: 0 8px;
+            border-radius: 8px;
+            flex-shrink: 0;
+            margin-left: 8px;
         }
 
         .video-card.active {
@@ -302,7 +326,6 @@
             font-weight: 500;
         }
 
-        /* ===== 加载状态 ===== */
         .loading {
             text-align: center;
             padding: 40px;
@@ -325,7 +348,6 @@
             }
         }
 
-        /* ===== Toast ===== */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -346,7 +368,6 @@
             opacity: 1;
         }
 
-        /* ===== 响应式 ===== */
         @media (max-width: 600px) {
             body {
                 padding: 16px;
@@ -377,6 +398,10 @@
                 height: 36px;
                 font-size: 16px;
             }
+            .video-card .thumbnail .subtitle-tag {
+                font-size: 9px;
+                padding: 1px 8px;
+            }
         }
 
         @media (max-width: 400px) {
@@ -391,7 +416,6 @@
 <body>
 
     <div class="container">
-        <!-- ===== 头部 ===== -->
         <div class="header">
             <div class="header-left">
                 <h1>
@@ -412,12 +436,10 @@
             </div>
         </div>
 
-        <!-- ===== 播放器 ===== -->
         <div id="player-container">
             <div id="dplayer"></div>
         </div>
 
-        <!-- ===== 视频统计 ===== -->
         <div class="video-stats" id="videoStats">
             共 <span class="highlight" id="totalCount">0</span> 个视频
             <span id="searchResult" style="display:none;">
@@ -425,7 +447,6 @@
             </span>
         </div>
 
-        <!-- ===== 视频列表 ===== -->
         <div id="video-list">
             <div class="loading">
                 <div class="spinner"></div>
@@ -434,7 +455,6 @@
         </div>
     </div>
 
-    <!-- ===== Toast ===== -->
     <div id="toast" class="toast"></div>
 
     <script>
@@ -447,7 +467,6 @@
             let isGenerating = false;
             let searchKeyword = '';
 
-            // ---- DOM ----
             const container = document.getElementById('player-container');
             const dplayerEl = document.getElementById('dplayer');
             const videoListEl = document.getElementById('video-list');
@@ -458,8 +477,10 @@
             const matchedCountEl = document.getElementById('matchedCount');
             const searchResultEl = document.getElementById('searchResult');
 
-            // ---- Toast ----
             let toastTimer = null;
+
+            // 将 dplayerInstance 暴露到全局，方便调试
+            window.dplayerInstance = dplayerInstance;
 
             function showToast(message, duration = 3000) {
                 toastEl.textContent = message;
@@ -470,7 +491,6 @@
                 }, duration);
             }
 
-            // ---- API ----
             async function fetchVideoList() {
                 try {
                     const res = await fetch('/api/videos');
@@ -495,7 +515,6 @@
                 }
             }
 
-            // ---- 搜索过滤 ----
             function filterVideos(keyword) {
                 const cards = document.querySelectorAll('.video-card');
                 let matched = 0;
@@ -508,7 +527,6 @@
                     if (match) matched++;
                 });
 
-                // 更新统计
                 matchedCountEl.textContent = matched;
                 if (keyword.trim()) {
                     searchResultEl.style.display = 'inline';
@@ -516,7 +534,6 @@
                     searchResultEl.style.display = 'none';
                 }
 
-                // 如果没有匹配的视频，显示提示
                 const noResult = document.querySelector('.no-result');
                 if (matched === 0 && cards.length > 0) {
                     if (!noResult) {
@@ -535,7 +552,6 @@
                 }
             }
 
-            // ---- 渲染视频列表 ----
             function renderVideoList(videos) {
                 videoData = videos;
 
@@ -574,24 +590,31 @@
                     const displayName = filename.replace(/\.[^.]+$/, '');
                     const thumbUrl = video.thumbnail || null;
                     const needGenerate = video.needGenerate || false;
+                    const hasSubtitle = video.subtitle !== null;
+                    const subType = video.subtitleType || '';
                     
                     html += `
                         <div class="video-card ${isActive ? 'active' : ''}" 
                              data-filename="${encoded}"
-                             data-needgenerate="${needGenerate}">
+                             data-needgenerate="${needGenerate}"
+                             data-subtitle="${video.subtitle || ''}"
+                             data-subtitle-type="${subType}">
                             <div class="thumbnail">
                                 ${thumbUrl ? `<img src="${thumbUrl}" alt="${displayName}" loading="lazy" />` : '🎬'}
                                 ${needGenerate ? '<div class="generating">📸 生成中...</div>' : ''}
+                                ${hasSubtitle ? `<div class="subtitle-tag"><span class="s-icon">💬</span> ${subType.toUpperCase()}</div>` : ''}
                                 <div class="play-overlay">▶</div>
                             </div>
-                            <div class="video-name" title="${filename}">${displayName}</div>
+                            <div class="video-name" title="${filename}">
+                                ${displayName}
+                                ${hasSubtitle ? `<span class="sub-badge">字幕</span>` : ''}
+                            </div>
                         </div>
                     `;
                 }
                 html += '</div>';
                 videoListEl.innerHTML = html;
 
-                // 绑定点击事件
                 videoListEl.querySelectorAll('.video-card').forEach(card => {
                     card.addEventListener('click', function(e) {
                         const filename = this.dataset.filename;
@@ -606,13 +629,11 @@
                     });
                 });
 
-                // 应用搜索过滤
                 if (searchKeyword.trim()) {
                     filterVideos(searchKeyword);
                 }
             }
 
-            // ---- 生成封面 ----
             async function generateAndUpdateThumb(filename, cardElement) {
                 try {
                     const result = await generateThumbnail(filename);
@@ -645,63 +666,109 @@
                 }
             }
 
-            // ---- 播放视频 ----
-            function playVideo(filename) {
-                if (!filename) return;
+			function playVideo(filename) {
+				if (!filename) return;
 
-                console.log('播放视频:', filename);
+				console.log('播放视频:', filename);
 
-                currentVideo = filename;
+				currentVideo = filename;
 
-                document.querySelectorAll('.video-card').forEach(card => {
-                    const cardName = decodeURIComponent(card.dataset.filename || '');
-                    card.classList.toggle('active', cardName === filename);
-                });
+				document.querySelectorAll('.video-card').forEach(card => {
+					const cardName = decodeURIComponent(card.dataset.filename || '');
+					card.classList.toggle('active', cardName === filename);
+				});
 
-                const videoUrl = `/video/${encodeURIComponent(filename)}`;
-                console.log('视频URL:', videoUrl);
+				const videoUrl = `/video/${encodeURIComponent(filename)}`;
+				
+				const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(filename)}"]`);
+				let subtitleUrl = null;
+				if (card) {
+					const sub = card.dataset.subtitle;
+					if (sub && sub !== '') {
+						subtitleUrl = sub;
+						console.log('找到字幕:', subtitleUrl);
+					}
+				}
 
-                container.classList.add('active');
+				console.log('视频URL:', videoUrl);
+				console.log('字幕URL:', subtitleUrl);
 
-                if (dplayerInstance) {
-                    try {
-                        dplayerInstance.destroy();
-                    } catch (e) {
-                        console.warn('销毁播放器时出错:', e);
-                    }
-                    dplayerInstance = null;
-                }
+				container.classList.add('active');
 
-                try {
-                    dplayerInstance = new DPlayer({
-                        container: dplayerEl,
-                        video: {
-                            url: videoUrl,
-                            type: 'auto',
-                        },
-                        autoplay: true,
-                        danmaku: false,
-                        logo: false,
-                        contextmenu: [],
-                        screenshot: true,
-                        lang: 'zh-cn',
-                        theme: '#333333',
-                    });
+				if (dplayerInstance) {
+					try {
+						dplayerInstance.destroy();
+					} catch (e) {
+						console.warn('销毁播放器时出错:', e);
+					}
+					dplayerInstance = null;
+				}
 
-                    dplayerInstance.on('error', function(e) {
-                        console.error('播放器错误:', e);
-                    });
+				try {
+					const playerConfig = {
+						container: dplayerEl,
+						video: {
+							url: videoUrl,
+							type: 'auto',
+						},
+						autoplay: true,
+						danmaku: false,
+						logo: false,
+						contextmenu: [],
+						screenshot: true,
+						lang: 'zh-cn',
+						theme: '#333333',
+					};
 
-                    dplayerInstance.on('loadedmetadata', function() {
-                        console.log('视频加载成功');
-                    });
+					if (subtitleUrl) {
+						playerConfig.subtitle = {
+							url: subtitleUrl,
+							type: 'webvtt',
+							fontSize: '20px',
+							bottom: '10%',
+							color: '#fff',
+							backgroundColor: 'rgba(0,0,0,0.5)',
+						};
+						console.log('✅ 字幕已在初始化中配置:', subtitleUrl);
+					}
 
-                } catch (e) {
-                    console.error('创建播放器失败:', e);
-                }
-            }
+					dplayerInstance = new DPlayer(playerConfig);
+					window.dplayerInstance = dplayerInstance;
 
-            // ---- 加载视频 ----
+					// 延迟尝试 loadSubtitle（作为备用）
+					if (subtitleUrl) {
+						setTimeout(function() {
+							if (dplayerInstance && typeof dplayerInstance.loadSubtitle === 'function') {
+								try {
+									dplayerInstance.loadSubtitle({
+										url: subtitleUrl,
+										type: 'webvtt',
+										fontSize: '20px',
+										bottom: '10%',
+										color: '#fff',
+										backgroundColor: 'rgba(0,0,0,0.5)',
+									});
+									console.log('✅ loadSubtitle 备用调用成功');
+								} catch (e) {
+									console.warn('loadSubtitle 备用调用失败:', e);
+								}
+							}
+						}, 500);
+					}
+
+					dplayerInstance.on('error', function(e) {
+						console.error('播放器错误:', e);
+					});
+
+					dplayerInstance.on('loadedmetadata', function() {
+						console.log('视频加载成功');
+					});
+
+				} catch (e) {
+					console.error('创建播放器失败:', e);
+				}
+			}
+
             async function loadVideos() {
                 videoListEl.innerHTML = `
                     <div class="loading">
@@ -730,7 +797,6 @@
                 }
             }
 
-            // ---- 搜索事件 ----
             searchInput.addEventListener('input', function() {
                 const keyword = this.value;
                 searchKeyword = keyword;
@@ -746,7 +812,6 @@
                 searchInput.focus();
             });
 
-            // ---- 键盘快捷键 ----
             searchInput.addEventListener('keydown', function(e) {
                 if (e.key === 'Escape') {
                     this.value = '';
@@ -757,7 +822,6 @@
                 }
             });
 
-            // ---- 初始化 ----
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', loadVideos);
             } else {
