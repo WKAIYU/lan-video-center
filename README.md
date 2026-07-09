@@ -351,3 +351,9 @@ MIT License · 自由使用，随意修改
 - [Express 官方文档](https://expressjs.com/)
 - [Node.js 官方文档](https://nodejs.org/)
 - [FFmpeg 官方文档](https://ffmpeg.org/)
+
+---
+
+## 📷屏幕截图
+
+<img width="1919" height="986" alt="image" src="https://github.com/user-attachments/assets/2c84ced0-e23a-4793-a2c6-dd788d09c530" />
