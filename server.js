@@ -76,13 +76,22 @@ app.get('/api/videos', (req, res) => {
                 thumbUrl = `/thumbnails/${baseName}.png`;
             }
             
-            // 处理字幕 - 优先查找 .vtt 格式
+            // 检查字幕是否存在（支持 .vtt, .srt, .ass）
             const subVtt = path.join(SUBTITLE_DIR, `${baseName}.vtt`);
+            const subSrt = path.join(SUBTITLE_DIR, `${baseName}.srt`);
+            const subAss = path.join(SUBTITLE_DIR, `${baseName}.ass`);
             let subtitleUrl = null;
             let subtitleType = null;
+
             if (fs.existsSync(subVtt)) {
                 subtitleUrl = `/subtitles/${baseName}.vtt`;
                 subtitleType = 'vtt';
+            } else if (fs.existsSync(subSrt)) {
+                subtitleUrl = `/subtitles/${baseName}.srt`;
+                subtitleType = 'srt';
+            } else if (fs.existsSync(subAss)) {
+                subtitleUrl = `/subtitles/${baseName}.ass`;
+                subtitleType = 'ass';
             }
             
             return {
@@ -249,25 +258,126 @@ app.get('/thumbnails/:filename', (req, res) => {
     res.sendFile(filePath);
 });
 
-// ---------- 字幕服务 ----------
+// ---------- 字幕服务（支持 .vtt, .srt, .ass） ----------
 app.get('/subtitles/:filename', (req, res) => {
     const filename = req.params.filename;
-    if (!filename.endsWith('.vtt')) {
-        return res.status(400).send('Only VTT subtitles are supported');
-    }
-    
     const filePath = path.join(SUBTITLE_DIR, filename);
     
     if (!fs.existsSync(filePath)) {
         return res.status(404).send('Subtitle not found');
     }
     
-    const content = fs.readFileSync(filePath, 'utf-8');
+    const ext = path.extname(filename).toLowerCase();
     
-    res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=31536000');
-    res.setHeader('Access-Control-Allow-Origin', '*');
-    res.send(content);
+    // .srt 文件转换为 VTT 格式
+    if (ext === '.srt') {
+        try {
+            let content = fs.readFileSync(filePath, 'utf-8');
+            let vttContent = 'WEBVTT\n\n';
+            content = content.replace(/\r\n/g, '\n');
+            // 将 SRT 的时间格式 (00:00:01,000) 转换为 VTT 格式 (00:00:01.000)
+            content = content.replace(/,/g, '.');
+            vttContent += content;
+            
+            res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+            res.setHeader('Cache-Control', 'public, max-age=31536000');
+            res.setHeader('Access-Control-Allow-Origin', '*');
+            res.send(vttContent);
+            console.log('✅ SRT 已转换为 VTT:', filename);
+        } catch (err) {
+            console.error('转换 SRT 失败:', err);
+            res.status(500).send('Error converting subtitle');
+        }
+        return;
+    }
+    
+    // .ass 文件转换为 VTT 格式
+	// .ass 文件转换为 VTT 格式
+	if (ext === '.ass') {
+		try {
+			const content = fs.readFileSync(filePath, 'utf-8');
+			let vttContent = 'WEBVTT\n\n';
+			const lines = content.split('\n');
+			let dialogueCount = 0;
+			
+			for (const line of lines) {
+				if (line.startsWith('Dialogue:')) {
+					const parts = line.split(',');
+					if (parts.length >= 5) {
+						let start = parts[1].trim();
+						let end = parts[2].trim();
+						const textParts = parts.slice(9);
+						let text = textParts.join(',').trim();
+						
+						// 清理文本中的 ASS 格式标记
+						text = text.replace(/\{[^}]*\}/g, '');
+						text = text.replace(/\\N/g, '\n');
+						
+						// 转换时间格式: 0:00:01.00 -> 00:00:01.000
+						function convertTime(timeStr) {
+							// 处理格式如 0:00:01.00 或 0:00:01.000
+							const parts = timeStr.split(':');
+							if (parts.length === 3) {
+								const hours = parts[0].padStart(2, '0');
+								const minutes = parts[1].padStart(2, '0');
+								let secs = parts[2];
+								let millis = '000';
+								if (secs.includes('.')) {
+									const secParts = secs.split('.');
+									secs = secParts[0].padStart(2, '0');
+									millis = secParts[1].padEnd(3, '0').substring(0, 3);
+								} else {
+									secs = secs.padStart(2, '0');
+								}
+								return `${hours}:${minutes}:${secs}.${millis}`;
+							}
+							return timeStr;
+						}
+						
+						const startVtt = convertTime(start);
+						const endVtt = convertTime(end);
+						
+						// 跳过开始时间等于结束时间的字幕
+						if (startVtt === endVtt) {
+							continue;
+						}
+						
+						dialogueCount++;
+						vttContent += `${dialogueCount}\n${startVtt} --> ${endVtt}\n${text}\n\n`;
+					}
+				}
+			}
+			
+			if (dialogueCount === 0) {
+				console.warn('⚠️ 未解析到 ASS 字幕，返回原始内容');
+				vttContent = 'WEBVTT\n\n' + content;
+			} else {
+				console.log(`✅ 成功解析 ${dialogueCount} 条 ASS 字幕`);
+			}
+			
+			res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+			res.setHeader('Cache-Control', 'public, max-age=31536000');
+			res.setHeader('Access-Control-Allow-Origin', '*');
+			res.send(vttContent);
+			console.log('✅ ASS 已转换为 VTT:', filename);
+		} catch (err) {
+			console.error('转换 ASS 失败:', err);
+			res.status(500).send('Error converting subtitle');
+		}
+		return;
+	}
+    
+    // .vtt 直接返回
+    if (ext === '.vtt') {
+        const content = fs.readFileSync(filePath, 'utf-8');
+        res.setHeader('Content-Type', 'text/vtt; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=31536000');
+        res.setHeader('Access-Control-Allow-Origin', '*');
+        res.send(content);
+        return;
+    }
+    
+    res.status(400).send('Unsupported subtitle format');
 });
 
 // ---------- 静态文件服务 ----------

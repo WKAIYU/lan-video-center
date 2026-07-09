@@ -666,108 +666,93 @@
                 }
             }
 
-			function playVideo(filename) {
-				if (!filename) return;
+            function playVideo(filename) {
+                if (!filename) return;
 
-				console.log('播放视频:', filename);
+                console.log('播放视频:', filename);
 
-				currentVideo = filename;
+                currentVideo = filename;
 
-				document.querySelectorAll('.video-card').forEach(card => {
-					const cardName = decodeURIComponent(card.dataset.filename || '');
-					card.classList.toggle('active', cardName === filename);
-				});
+                document.querySelectorAll('.video-card').forEach(card => {
+                    const cardName = decodeURIComponent(card.dataset.filename || '');
+                    card.classList.toggle('active', cardName === filename);
+                });
 
-				const videoUrl = `/video/${encodeURIComponent(filename)}`;
-				
-				const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(filename)}"]`);
-				let subtitleUrl = null;
-				if (card) {
-					const sub = card.dataset.subtitle;
-					if (sub && sub !== '') {
-						subtitleUrl = sub;
-						console.log('找到字幕:', subtitleUrl);
-					}
-				}
+                const videoUrl = `/video/${encodeURIComponent(filename)}`;
+                
+                // 获取字幕信息
+                const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(filename)}"]`);
+                let subtitleUrl = null;
+                let subtitleType = null;
+                if (card) {
+                    const sub = card.dataset.subtitle;
+                    const type = card.dataset.subtitleType || 'vtt';
+                    if (sub && sub !== '') {
+                        subtitleUrl = sub;
+                        subtitleType = type;
+                        console.log('找到字幕:', subtitleUrl, '类型:', subtitleType);
+                    }
+                }
 
-				console.log('视频URL:', videoUrl);
-				console.log('字幕URL:', subtitleUrl);
+                console.log('视频URL:', videoUrl);
+                console.log('字幕URL:', subtitleUrl);
 
-				container.classList.add('active');
+                container.classList.add('active');
 
-				if (dplayerInstance) {
-					try {
-						dplayerInstance.destroy();
-					} catch (e) {
-						console.warn('销毁播放器时出错:', e);
-					}
-					dplayerInstance = null;
-				}
+                if (dplayerInstance) {
+                    try {
+                        dplayerInstance.destroy();
+                    } catch (e) {
+                        console.warn('销毁播放器时出错:', e);
+                    }
+                    dplayerInstance = null;
+                }
 
-				try {
-					const playerConfig = {
-						container: dplayerEl,
-						video: {
-							url: videoUrl,
-							type: 'auto',
-						},
-						autoplay: true,
-						danmaku: false,
-						logo: false,
-						contextmenu: [],
-						screenshot: true,
-						lang: 'zh-cn',
-						theme: '#333333',
-					};
+                try {
+                    // 构建播放器配置
+                    const playerConfig = {
+                        container: dplayerEl,
+                        video: {
+                            url: videoUrl,
+                            type: 'auto',
+                        },
+                        autoplay: true,
+                        danmaku: false,
+                        logo: false,
+                        contextmenu: [],
+                        screenshot: true,
+                        lang: 'zh-cn',
+                        theme: '#333333',
+                    };
 
-					if (subtitleUrl) {
-						playerConfig.subtitle = {
-							url: subtitleUrl,
-							type: 'webvtt',
-							fontSize: '20px',
-							bottom: '10%',
-							color: '#fff',
-							backgroundColor: 'rgba(0,0,0,0.5)',
-						};
-						console.log('✅ 字幕已在初始化中配置:', subtitleUrl);
-					}
+                    // 如果有字幕，在初始化时直接加载
+                    if (subtitleUrl) {
+                        playerConfig.subtitle = {
+                            url: subtitleUrl,
+                            type: 'webvtt',
+                            fontSize: '20px',
+                            bottom: '10%',
+                            color: '#fff',
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                        };
+                        console.log('✅ 字幕已在初始化中配置 (原始类型:', subtitleType, '):', subtitleUrl);
+                    }
 
-					dplayerInstance = new DPlayer(playerConfig);
-					window.dplayerInstance = dplayerInstance;
+                    dplayerInstance = new DPlayer(playerConfig);
+                    window.dplayerInstance = dplayerInstance;
 
-					// 延迟尝试 loadSubtitle（作为备用）
-					if (subtitleUrl) {
-						setTimeout(function() {
-							if (dplayerInstance && typeof dplayerInstance.loadSubtitle === 'function') {
-								try {
-									dplayerInstance.loadSubtitle({
-										url: subtitleUrl,
-										type: 'webvtt',
-										fontSize: '20px',
-										bottom: '10%',
-										color: '#fff',
-										backgroundColor: 'rgba(0,0,0,0.5)',
-									});
-									console.log('✅ loadSubtitle 备用调用成功');
-								} catch (e) {
-									console.warn('loadSubtitle 备用调用失败:', e);
-								}
-							}
-						}, 500);
-					}
+                    dplayerInstance.on('error', function(e) {
+                        console.error('播放器错误:', e);
+                    });
 
-					dplayerInstance.on('error', function(e) {
-						console.error('播放器错误:', e);
-					});
+                    dplayerInstance.on('loadedmetadata', function() {
+                        console.log('视频加载成功');
+                    });
 
-					dplayerInstance.on('loadedmetadata', function() {
-						console.log('视频加载成功');
-					});
-
-				} catch (e) {
-					console.error('创建播放器失败:', e);
-				}
-			}
+                } catch (e) {
+                    console.error('创建播放器失败:', e);
+                }
+            }
 
             async function loadVideos() {
                 videoListEl.innerHTML = `
