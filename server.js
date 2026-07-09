@@ -267,6 +267,12 @@ app.get('/subtitles/:filename', (req, res) => {
         return res.status(404).send('Subtitle not found');
     }
     
+    // 设置禁用缓存的头
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    
     const ext = path.extname(filename).toLowerCase();
     
     // .srt 文件转换为 VTT 格式
@@ -292,7 +298,6 @@ app.get('/subtitles/:filename', (req, res) => {
     }
     
     // .ass 文件转换为 VTT 格式
-	// .ass 文件转换为 VTT 格式
 	if (ext === '.ass') {
 		try {
 			const content = fs.readFileSync(filePath, 'utf-8');
