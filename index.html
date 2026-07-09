@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>局域网视频中心</title>
+    <title>LVC - 局域网视频中心</title>
     
     <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎬</text></svg>">
 
@@ -30,6 +30,7 @@
             margin: 0 auto;
         }
 
+        /* ===== 头部 ===== */
         .header {
             margin-bottom: 28px;
             padding-bottom: 16px;
@@ -48,49 +49,86 @@
             color: #222;
         }
 
+        .header-left h1 .lvc {
+            font-weight: 300;
+            color: #999;
+            font-size: 14px;
+            margin-left: 8px;
+        }
+
         .header-left .subtitle {
-            margin-top: 6px;
+            margin-top: 4px;
             font-size: 14px;
             color: #999;
         }
 
-        .header-actions {
+        /* ===== 搜索框 ===== */
+        .search-bar {
             display: flex;
+            align-items: center;
             gap: 10px;
+            min-width: 200px;
         }
 
-        .btn {
-            padding: 8px 16px;
+        .search-bar input {
+            padding: 8px 14px;
             border: 1px solid #ddd;
             border-radius: 6px;
-            background: #fff;
-            color: #333;
-            cursor: pointer;
-            font-size: 13px;
+            font-size: 14px;
+            outline: none;
             transition: all 0.2s ease;
+            width: 200px;
+            background: #f8f8f8;
         }
 
-        .btn:hover {
-            background: #f0f0f0;
-            border-color: #bbb;
-        }
-
-        .btn-primary {
-            background: #333;
-            color: #fff;
+        .search-bar input:focus {
             border-color: #333;
+            background: #fff;
+            box-shadow: 0 0 0 3px rgba(0, 0, 0, 0.05);
         }
 
-        .btn-primary:hover {
-            background: #555;
-            border-color: #555;
+        .search-bar input::placeholder {
+            color: #bbb;
         }
 
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
+        .search-bar .search-icon {
+            font-size: 18px;
+            color: #999;
+            cursor: default;
         }
 
+        .search-bar .clear-btn {
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 16px;
+            padding: 0 4px;
+            display: none;
+        }
+
+        .search-bar .clear-btn:hover {
+            color: #666;
+        }
+
+        .search-bar .clear-btn.visible {
+            display: block;
+        }
+
+        /* ===== 统计信息 ===== */
+        .video-stats {
+            font-size: 13px;
+            color: #999;
+            margin-bottom: 12px;
+            padding: 0 4px;
+        }
+
+        .video-stats .highlight {
+            color: #333;
+            font-weight: 500;
+        }
+
+        /* ===== 播放器 ===== */
         #player-container {
             margin-bottom: 32px;
             background: #fafafa;
@@ -109,6 +147,7 @@
             height: 480px;
         }
 
+        /* ===== 空状态 ===== */
         .empty-hint {
             text-align: center;
             padding: 60px 20px;
@@ -135,6 +174,7 @@
             margin-top: 8px;
         }
 
+        /* ===== 视频网格 ===== */
         .video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -142,6 +182,7 @@
             margin-top: 8px;
         }
 
+        /* ===== 视频卡片 ===== */
         .video-card {
             background: #f8f8f8;
             border-radius: 8px;
@@ -161,6 +202,11 @@
 
         .video-card:active {
             transform: scale(0.98);
+        }
+
+        /* 隐藏被搜索过滤掉的卡片 */
+        .video-card.hidden {
+            display: none;
         }
 
         .video-card .thumbnail {
@@ -256,6 +302,7 @@
             font-weight: 500;
         }
 
+        /* ===== 加载状态 ===== */
         .loading {
             text-align: center;
             padding: 40px;
@@ -278,6 +325,7 @@
             }
         }
 
+        /* ===== Toast ===== */
         .toast {
             position: fixed;
             bottom: 30px;
@@ -298,6 +346,7 @@
             opacity: 1;
         }
 
+        /* ===== 响应式 ===== */
         @media (max-width: 600px) {
             body {
                 padding: 16px;
@@ -309,7 +358,18 @@
                 grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
                 gap: 12px;
             }
-            .header h1 {
+            .header {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .search-bar {
+                min-width: unset;
+                width: 100%;
+            }
+            .search-bar input {
+                width: 100%;
+            }
+            .header-left h1 {
                 font-size: 20px;
             }
             .video-card .play-overlay {
@@ -317,16 +377,12 @@
                 height: 36px;
                 font-size: 16px;
             }
-            .header {
-                flex-direction: column;
-                align-items: stretch;
-            }
-            .header-actions {
-                justify-content: stretch;
-            }
-            .header-actions .btn {
-                flex: 1;
-                text-align: center;
+        }
+
+        @media (max-width: 400px) {
+            .video-grid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+                gap: 10px;
             }
         }
     </style>
@@ -335,21 +391,41 @@
 <body>
 
     <div class="container">
+        <!-- ===== 头部 ===== -->
         <div class="header">
             <div class="header-left">
-                <h1>📹 视频中心</h1>
+                <h1>
+                    📹 视频中心
+                    <span class="lvc">LVC</span>
+                </h1>
                 <div class="subtitle">点击视频卡片即可播放 · 支持浏览器直接播放 MP4</div>
             </div>
-            <div class="header-actions">
-                <button class="btn" id="refreshBtn" title="刷新视频列表">🔄 刷新</button>
-                <button class="btn btn-primary" id="generateAllBtn" title="为所有视频生成封面">🎨 生成全部封面</button>
+            <div class="search-bar">
+                <span class="search-icon">🔍</span>
+                <input 
+                    type="text" 
+                    id="searchInput" 
+                    placeholder="搜索视频..." 
+                    autocomplete="off"
+                />
+                <button class="clear-btn" id="clearBtn">✕</button>
             </div>
         </div>
 
+        <!-- ===== 播放器 ===== -->
         <div id="player-container">
             <div id="dplayer"></div>
         </div>
 
+        <!-- ===== 视频统计 ===== -->
+        <div class="video-stats" id="videoStats">
+            共 <span class="highlight" id="totalCount">0</span> 个视频
+            <span id="searchResult" style="display:none;">
+                · 找到 <span class="highlight" id="matchedCount">0</span> 个
+            </span>
+        </div>
+
+        <!-- ===== 视频列表 ===== -->
         <div id="video-list">
             <div class="loading">
                 <div class="spinner"></div>
@@ -358,7 +434,7 @@
         </div>
     </div>
 
-    <!-- Toast 通知 -->
+    <!-- ===== Toast ===== -->
     <div id="toast" class="toast"></div>
 
     <script>
@@ -369,15 +445,20 @@
             let dplayerInstance = null;
             let videoData = [];
             let isGenerating = false;
+            let searchKeyword = '';
 
+            // ---- DOM ----
             const container = document.getElementById('player-container');
             const dplayerEl = document.getElementById('dplayer');
             const videoListEl = document.getElementById('video-list');
             const toastEl = document.getElementById('toast');
-            const refreshBtn = document.getElementById('refreshBtn');
-            const generateAllBtn = document.getElementById('generateAllBtn');
+            const searchInput = document.getElementById('searchInput');
+            const clearBtn = document.getElementById('clearBtn');
+            const totalCountEl = document.getElementById('totalCount');
+            const matchedCountEl = document.getElementById('matchedCount');
+            const searchResultEl = document.getElementById('searchResult');
 
-            // ---------- Toast 通知 ----------
+            // ---- Toast ----
             let toastTimer = null;
 
             function showToast(message, duration = 3000) {
@@ -389,7 +470,7 @@
                 }, duration);
             }
 
-            // ---------- API 请求 ----------
+            // ---- API ----
             async function fetchVideoList() {
                 try {
                     const res = await fetch('/api/videos');
@@ -414,36 +495,47 @@
                 }
             }
 
-            async function generateAllThumbnails() {
-                if (isGenerating) return;
-                isGenerating = true;
-                generateAllBtn.disabled = true;
-                generateAllBtn.textContent = '⏳ 生成中...';
-                showToast('正在生成所有封面，请稍候...', 5000);
+            // ---- 搜索过滤 ----
+            function filterVideos(keyword) {
+                const cards = document.querySelectorAll('.video-card');
+                let matched = 0;
 
-                try {
-                    const res = await fetch('/api/generate-all-thumbs', {
-                        method: 'POST'
-                    });
-                    const result = await res.json();
-                    if (result.success) {
-                        showToast(`✅ ${result.message}`, 4000);
-                        // 刷新列表
-                        await loadVideos();
-                    } else {
-                        showToast('❌ 生成失败: ' + (result.message || '未知错误'), 4000);
+                cards.forEach(card => {
+                    const name = card.dataset.filename || '';
+                    const displayName = decodeURIComponent(name);
+                    const match = displayName.toLowerCase().includes(keyword.toLowerCase());
+                    card.classList.toggle('hidden', !match);
+                    if (match) matched++;
+                });
+
+                // 更新统计
+                matchedCountEl.textContent = matched;
+                if (keyword.trim()) {
+                    searchResultEl.style.display = 'inline';
+                } else {
+                    searchResultEl.style.display = 'none';
+                }
+
+                // 如果没有匹配的视频，显示提示
+                const noResult = document.querySelector('.no-result');
+                if (matched === 0 && cards.length > 0) {
+                    if (!noResult) {
+                        const hint = document.createElement('div');
+                        hint.className = 'empty-hint no-result';
+                        hint.innerHTML = `
+                            <span class="icon">🔍</span>
+                            没有找到匹配的视频<br />
+                            <small style="color: #ccc;">试试其他关键词</small>
+                        `;
+                        videoListEl.appendChild(hint);
                     }
-                } catch (err) {
-                    console.error('批量生成失败:', err);
-                    showToast('❌ 批量生成失败，请检查控制台', 4000);
-                } finally {
-                    isGenerating = false;
-                    generateAllBtn.disabled = false;
-                    generateAllBtn.textContent = '🎨 生成全部封面';
+                } else {
+                    const existing = document.querySelector('.no-result');
+                    if (existing) existing.remove();
                 }
             }
 
-            // ---------- 渲染视频列表 ----------
+            // ---- 渲染视频列表 ----
             function renderVideoList(videos) {
                 videoData = videos;
 
@@ -455,6 +547,7 @@
                             <small style="color: #ccc;">请确保服务正在运行</small>
                         </div>
                     `;
+                    totalCountEl.textContent = '0';
                     return;
                 }
 
@@ -467,8 +560,11 @@
                             <small style="color: #ccc; display: block; margin-top: 8px;">然后刷新页面</small>
                         </div>
                     `;
+                    totalCountEl.textContent = '0';
                     return;
                 }
+
+                totalCountEl.textContent = videos.length;
 
                 let html = '<div class="video-grid">';
                 for (const video of videos) {
@@ -501,7 +597,6 @@
                         const filename = this.dataset.filename;
                         if (filename) {
                             const decoded = decodeURIComponent(filename);
-                            // 如果视频需要生成封面，先触发生成
                             const needGen = this.dataset.needgenerate === 'true';
                             if (needGen) {
                                 generateAndUpdateThumb(decoded, this);
@@ -510,35 +605,34 @@
                         }
                     });
                 });
+
+                // 应用搜索过滤
+                if (searchKeyword.trim()) {
+                    filterVideos(searchKeyword);
+                }
             }
 
-            // ---------- 生成单个视频封面并更新卡片 ----------
+            // ---- 生成封面 ----
             async function generateAndUpdateThumb(filename, cardElement) {
                 try {
                     const result = await generateThumbnail(filename);
                     if (result && result.success) {
-                        // 更新卡片
                         const thumbDiv = cardElement.querySelector('.thumbnail');
                         const genDiv = thumbDiv.querySelector('.generating');
                         if (genDiv) genDiv.remove();
-                        // 更新图片
                         const img = thumbDiv.querySelector('img');
                         if (img) {
-                            img.src = result.thumbnail + '?t=' + Date.now(); // 防止缓存
+                            img.src = result.thumbnail + '?t=' + Date.now();
                         } else {
-                            // 如果没有 img 元素，创建一个
                             const imgEl = document.createElement('img');
                             imgEl.src = result.thumbnail + '?t=' + Date.now();
                             imgEl.alt = filename.replace(/\.[^.]+$/, '');
                             imgEl.loading = 'lazy';
-                            // 移除 fallback 内容
                             const fallback = thumbDiv.querySelector('.fallback');
                             if (fallback) fallback.remove();
                             thumbDiv.appendChild(imgEl);
                         }
-                        // 更新 data 属性
                         cardElement.dataset.needgenerate = 'false';
-                        // 更新 videoData
                         const video = videoData.find(v => v.filename === filename);
                         if (video) {
                             video.thumbnail = result.thumbnail;
@@ -551,7 +645,7 @@
                 }
             }
 
-            // ---------- 播放视频 ----------
+            // ---- 播放视频 ----
             function playVideo(filename) {
                 if (!filename) return;
 
@@ -596,7 +690,6 @@
 
                     dplayerInstance.on('error', function(e) {
                         console.error('播放器错误:', e);
-                        console.log('视频加载失败，请检查文件是否完整或格式是否正确');
                     });
 
                     dplayerInstance.on('loadedmetadata', function() {
@@ -605,11 +698,10 @@
 
                 } catch (e) {
                     console.error('创建播放器失败:', e);
-                    console.log('播放器初始化失败，请刷新页面重试');
                 }
             }
 
-            // ---------- 加载视频列表 ----------
+            // ---- 加载视频 ----
             async function loadVideos() {
                 videoListEl.innerHTML = `
                     <div class="loading">
@@ -622,20 +714,14 @@
                 renderVideoList(videos);
 
                 if (videos && Array.isArray(videos) && videos.length > 0) {
-                    // 检查是否有视频需要生成封面，如果有则后台生成
                     const needGen = videos.filter(v => v.needGenerate);
-                    if (needGen.length > 0) {
-                        console.log(`发现 ${needGen.length} 个视频需要生成封面，后台生成中...`);
-                        // 逐个生成
-                        for (const video of needGen) {
-                            const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(video.filename)}"]`);
-                            if (card) {
-                                await generateAndUpdateThumb(video.filename, card);
-                            }
+                    for (const video of needGen) {
+                        const card = document.querySelector(`.video-card[data-filename="${encodeURIComponent(video.filename)}"]`);
+                        if (card) {
+                            await generateAndUpdateThumb(video.filename, card);
                         }
                     }
                     
-                    // 播放第一个视频
                     setTimeout(() => {
                         playVideo(videos[0].filename);
                     }, 100);
@@ -644,11 +730,34 @@
                 }
             }
 
-            // ---------- 事件绑定 ----------
-            refreshBtn.addEventListener('click', loadVideos);
-            generateAllBtn.addEventListener('click', generateAllThumbnails);
+            // ---- 搜索事件 ----
+            searchInput.addEventListener('input', function() {
+                const keyword = this.value;
+                searchKeyword = keyword;
+                clearBtn.classList.toggle('visible', keyword.length > 0);
+                filterVideos(keyword);
+            });
 
-            // ---------- 初始化 ----------
+            clearBtn.addEventListener('click', function() {
+                searchInput.value = '';
+                searchKeyword = '';
+                this.classList.remove('visible');
+                filterVideos('');
+                searchInput.focus();
+            });
+
+            // ---- 键盘快捷键 ----
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    this.value = '';
+                    searchKeyword = '';
+                    clearBtn.classList.remove('visible');
+                    filterVideos('');
+                    this.blur();
+                }
+            });
+
+            // ---- 初始化 ----
             if (document.readyState === 'loading') {
                 document.addEventListener('DOMContentLoaded', loadVideos);
             } else {
