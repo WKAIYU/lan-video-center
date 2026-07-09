@@ -92,7 +92,7 @@ npm start
 📹 LVC - Lan Video Center 已启动
 ============================================================
   本地访问: http://127.0.0.1:8000
-  局域网访问: http://192.168.2.197:8000
+  局域网访问: http://[你的局域网IP地址]:8000
   视频目录: /path/to/lan-video-center/video
   字幕目录: /path/to/lan-video-center/subtitles
   缩略图目录: /path/to/lan-video-center/thumbnails
