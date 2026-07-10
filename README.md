@@ -371,4 +371,4 @@ MIT License · 自由使用，随意修改
 
 ## 📷 屏幕截图
 
-<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/88498dd6-5b3f-4a55-8689-40500d908f0f" />
+<img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/0d7de775-d8af-4be3-9cdf-efd2a3f05d5f" />
