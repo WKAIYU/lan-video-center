@@ -1,7 +1,7 @@
 # 📹 局域网视频中心 (LVC)
 LAN Video Center
 
-> 在你电脑上搭建一个轻量级的局域网视频服务，让手机、平板、电视等设备通过浏览器观看 MP4 视频，支持字幕自动加载。
+> 在你电脑上搭建一个轻量级的局域网视频服务，让手机、平板、电视等设备通过浏览器观看视频，支持多种格式和字幕自动加载。
 
 基于 **Node.js** 和 **DPlayer**，支持视频列表浏览、点击播放、进度拖拽、字幕加载，界面纯白简洁。
 
@@ -11,11 +11,12 @@ LAN Video Center
 
 - 🚀 **高性能**：基于 Node.js + Express，支持流式传输和并发访问
 - 📱 **多设备支持**：手机、平板、电脑均可通过浏览器访问
-- 🎨 **简洁美观**：纯白界面，卡片式视频列表
+- 🎨 **简洁美观**：纯白界面，卡片式视频列表，带格式标签
 - 🎯 **开箱即用**：只需把视频放到 `video/` 文件夹，一键启动
 - 🖱️ **拖拽进度**：支持视频进度条拖拽（Range 请求）
 - 🖼️ **智能封面**：自动生成视频缩略图，也可手动放置自定义封面
-- 💬 **字幕支持**：自动加载同名字幕文件（`.vtt`,`.srt`,`.ass`）
+- 💬 **字幕支持**：自动加载同名字幕文件（`.vtt`、`.srt`、`.ass`）
+- 🎬 **多格式支持**：支持 10 种视频格式（MP4、MKV、AVI、MOV、WMV、FLV、WebM、M4V、MPEG、Ogg）
 - 🔍 **搜索功能**：快速筛选视频
 - 📦 **轻量依赖**：仅需 Node.js 和 Express
 
@@ -25,8 +26,8 @@ LAN Video Center
 
 ```
 lan-video-center/
-├── video/              # 视频文件 (.mp4)
-├── subtitles/          # 字幕文件 (.vtt)
+├── video/              # 视频文件（支持多种格式）
+├── subtitles/          # 字幕文件（.vtt / .srt / .ass）
 ├── thumbnails/         # 自动生成的封面
 ├── server.js           # 服务端代码
 ├── package.json        # 依赖配置
@@ -65,14 +66,14 @@ npm install
 
 ### 4. 放入视频
 
-在项目根目录下创建 `video/` 文件夹，将所有 `.mp4` 视频文件放进去：
+在项目根目录下创建 `video/` 文件夹，将视频文件放进去：
 
 ```
 lan-video-center/
 ├── video/             ← 创建这个文件夹，放入视频
 │   ├── 电影A.mp4
-│   ├── 电视剧B.mp4
-│   └── 纪录片C.mp4
+│   ├── 电影B.mkv
+│   └── 电影C.avi
 ├── server.js
 ├── package.json
 ├── index.html
@@ -109,16 +110,34 @@ npm start
 
 ---
 
+## 🎬 支持的视频格式
+
+| 格式 | 扩展名 | 说明 |
+|------|--------|------|
+| MP4 | `.mp4` | 最通用，兼容性最好 |
+| WebM | `.webm` | 开放格式，网页友好 |
+| Ogg | `.ogg` | 开放格式 |
+| MKV | `.mkv` | 高清视频常用 |
+| AVI | `.avi` | 经典格式 |
+| MOV | `.mov` | Apple 格式 |
+| WMV | `.wmv` | Windows 格式 |
+| FLV | `.flv` | Flash 视频 |
+| M4V | `.m4v` | Apple 格式 |
+| MPEG | `.mpg` `.mpeg` | 标准格式 |
+
+> 💡 视频卡片右上角会显示对应的格式标签，不同格式用不同颜色区分。
+
+---
+
 ## 💬 字幕使用说明
 
 ### 使用方法
 
 1. 在项目根目录创建 `subtitles/` 文件夹
 2. 将字幕文件放入，**文件名需与视频文件同名**
-   - eg:
    - 视频：`video/我的视频.mp4`
    - 字幕：`subtitles/我的视频.vtt`
-3. 支持格式：`.vtt`,`.srt`,`.ass`
+3. 支持格式：`.vtt`、`.srt`、`.ass`
 
 ### 目录结构示例
 
@@ -266,21 +285,22 @@ size: '320x180',  // 改为你想要的尺寸，如 '640x360'
 
 - 尽量使用 **Wi-Fi 5G** 网络，或使用有线网络连接
 - 大码率视频在无线传输时可能受限，可尝试压缩视频
-- Node.js 版本已优化流式传输，比 Python 版本性能更好
+- Node.js 版本已优化流式传输
 
 ### Q: 支持哪些视频格式？
 
-- 目前仅支持 `.mp4` 格式
-- **推荐编码**：H.264（视频）+ AAC（音频），这是浏览器兼容性最好的组合
-- 其他格式（如 MKV、AVI）需先转换为 MP4
+支持 **MP4、MKV、AVI、MOV、WMV、FLV、WebM、M4V、MPEG、Ogg** 共 10 种格式。
 
 ### Q: 如何转换视频格式？
 
 使用免费工具 **HandBrake** 或 FFmpeg：
 
 ```bash
-# FFmpeg 转换示例
-ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
+# FFmpeg 转换示例（MP4 → MKV）
+ffmpeg -i input.mp4 -c copy output.mkv
+
+# MP4 → AVI
+ffmpeg -i input.mp4 -c:v libx264 -c:a aac output.avi
 ```
 
 ### Q: 字幕不显示怎么办？
@@ -294,22 +314,17 @@ ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
 
 ### Q: 封面图不显示怎么办？
 
-1. 检查 FFmpeg 是否正确安装（方式一需要）
+1. 检查 FFmpeg 是否正确安装
    ```bash
    ffmpeg -version
    ```
 2. 检查 `thumbnails/` 文件夹是否有写入权限
-3. 手动放入一张图片测试（方式二）
+3. 手动放入一张图片测试
 4. 查看控制台是否有错误日志
 
 ### Q: 如何清除自动生成的封面？
 
 直接删除 `thumbnails/` 文件夹即可，服务会在下次访问时重新生成。
-
-### Q: 封面图太大影响加载速度怎么办？
-
-- 修改 `server.js` 中的 `size` 参数为更小尺寸
-- 或者使用方式二，手动压缩图片后再放入
 
 ---
 
@@ -320,8 +335,8 @@ ffmpeg -i input.mkv -c:v h264 -c:a aac output.mp4
 | `server.js` | Node.js 服务端，提供视频列表 API、缩略图生成和视频文件服务 |
 | `package.json` | 项目依赖配置文件 |
 | `index.html` | 前端页面，包含视频列表和 DPlayer 播放器 |
-| `video/` | 存放 MP4 视频文件的目录（需手动创建） |
-| `subtitles/` | 存放字幕文件的目录（需手动创建） |
+| `video/` | 存放视频文件的目录（支持多种格式） |
+| `subtitles/` | 存放字幕文件的目录（.vtt / .srt / .ass） |
 | `thumbnails/` | 存放封面图的目录（自动创建，也可手动放置） |
 | `README.md` | 项目说明文档（本文件） |
 
@@ -354,7 +369,6 @@ MIT License · 自由使用，随意修改
 
 ---
 
-## 📷屏幕截图
+## 📷 屏幕截图
 
 <img width="1920" height="1200" alt="image" src="https://github.com/user-attachments/assets/88498dd6-5b3f-4a55-8689-40500d908f0f" />
-

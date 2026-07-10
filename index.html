@@ -402,6 +402,16 @@
                 font-size: 9px;
                 padding: 1px 8px;
             }
+            .video-card .video-name .format-badge {
+				font-size: 9px;
+				color: #fff;
+				padding: 1px 8px;
+				border-radius: 10px;
+				flex-shrink: 0;
+				margin-left: 6px;
+				font-weight: 500;
+				letter-spacing: 0.3px;
+			}
         }
 
         @media (max-width: 400px) {
@@ -554,7 +564,7 @@
 
             function renderVideoList(videos) {
                 videoData = videos;
-
+                
                 if (!videos || !Array.isArray(videos)) {
                     videoListEl.innerHTML = `
                         <div class="empty-hint">
@@ -592,25 +602,42 @@
                     const needGenerate = video.needGenerate || false;
                     const hasSubtitle = video.subtitle !== null;
                     const subType = video.subtitleType || '';
+                    const format = video.format || 'mp4';
                     
-                    html += `
-                        <div class="video-card ${isActive ? 'active' : ''}" 
-                             data-filename="${encoded}"
-                             data-needgenerate="${needGenerate}"
-                             data-subtitle="${video.subtitle || ''}"
-                             data-subtitle-type="${subType}">
-                            <div class="thumbnail">
-                                ${thumbUrl ? `<img src="${thumbUrl}" alt="${displayName}" loading="lazy" />` : '🎬'}
-                                ${needGenerate ? '<div class="generating">📸 生成中...</div>' : ''}
-                                ${hasSubtitle ? `<div class="subtitle-tag"><span class="s-icon">💬</span> ${subType.toUpperCase()}</div>` : ''}
-                                <div class="play-overlay">▶</div>
-                            </div>
-                            <div class="video-name" title="${filename}">
-                                ${displayName}
-                                ${hasSubtitle ? `<span class="sub-badge">字幕</span>` : ''}
-                            </div>
-                        </div>
-                    `;
+                    // 格式标签的颜色映射
+					const formatColors = {
+						'mp4': '#4CAF50',
+						'mkv': '#FF9800',
+						'avi': '#2196F3',
+						'mov': '#9C27B0',
+						'wmv': '#F44336',
+						'flv': '#FF5722',
+						'webm': '#00BCD4',
+						'm4v': '#795548',
+						'mpg': '#607D8B',
+						'mpeg': '#607D8B',
+						'ogg': '#8BC34A'
+					};
+					const formatColor = formatColors[format] || '#999';
+                    
+					html += `
+						<div class="video-card ${isActive ? 'active' : ''}" 
+							 data-filename="${encoded}"
+							 data-needgenerate="${needGenerate}"
+							 data-subtitle="${video.subtitle || ''}"
+							 data-subtitle-type="${subType}">
+							<div class="thumbnail">
+								${thumbUrl ? `<img src="${thumbUrl}" alt="${displayName}" loading="lazy" />` : '🎬'}
+								${needGenerate ? '<div class="generating">📸 生成中...</div>' : ''}
+								${hasSubtitle ? `<div class="subtitle-tag"><span class="s-icon">💬</span> ${subType.toUpperCase()}</div>` : ''}
+								<div class="play-overlay">▶</div>
+							</div>
+							<div class="video-name" title="${filename}">
+								<span>${displayName}</span>
+								<span class="format-badge" style="background:${formatColor};">${format.toUpperCase()}</span>
+							</div>
+						</div>
+					`;
                 }
                 html += '</div>';
                 videoListEl.innerHTML = html;
